@@ -1,6 +1,6 @@
 {
   "name": "@agent-config-vault/core",
-  "version": "26.728.1",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",

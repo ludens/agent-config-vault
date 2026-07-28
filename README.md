@@ -55,28 +55,26 @@ Workflow: [`.github/workflows/desktop-build.yml`](.github/workflows/desktop-buil
 | Trigger | What happens |
 |---------|----------------|
 | `workflow_dispatch` (manual) | Test + build macOS aarch64 + Windows x64 → **Artifacts** |
-| Push tag `v*` (e.g. `v26.728.1`) | Same + **draft GitHub Release** with files attached |
+| Push tag `v*` (e.g. `v1.0.0`) | Same + **draft GitHub Release** with files attached |
 
 Artifacts:
 
 - `agent-config-vault-macos-aarch64`
 - `agent-config-vault-windows-x64`
 
-### Versioning (CalVer, 3-part)
+### Versioning (SemVer)
 
-Format: **`YY.MMDD.N`** (2-digit year, month+day as minor, same-day sequence as patch). Timezone: **KST**. No leading zeros (SemVer / Tauri).
+Format: **`MAJOR.MINOR.PATCH`** (e.g. `1.0.0`).
 
-| Example | Meaning |
-|---------|---------|
-| `26.728.0` | 2026-07-28, first release that day |
-| `26.728.1` | 2026-07-28, second release that day |
-| Tag | `v26.728.1` |
+Git tags: **`vMAJOR.MINOR.PATCH`** (e.g. `v1.0.0`).
 
-Why two-digit year? Windows MSI/WiX rejects **major > 255**. All surfaces (Node, Tauri, Cargo, tags) use the **same** three-part string.
+All surfaces use the same string: root/`packages/core`/`apps/desktop` `package.json`, `tauri.conf.json`, and `Cargo.toml`.
+
+Windows MSI/WiX requires each of major/minor/patch ≤ **255**, which standard SemVer releases satisfy.
 
 ```bash
-git tag v26.728.1
-git push origin v26.728.1
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 
