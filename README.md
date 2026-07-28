@@ -55,37 +55,31 @@ Workflow: [`.github/workflows/desktop-build.yml`](.github/workflows/desktop-buil
 | Trigger | What happens |
 |---------|----------------|
 | `workflow_dispatch` (manual) | Test + build macOS aarch64 + Windows x64 → **Artifacts** |
-| Push tag `v*` (e.g. `v2026.07.28.0`) | Same + **draft GitHub Release** with files attached |
+| Push tag `v*` (e.g. `v26.7.28`) | Same + **draft GitHub Release** with files attached |
 
 Artifacts:
 
 - `agent-config-vault-macos-aarch64`
 - `agent-config-vault-windows-x64`
 
-### Versioning (CalVer + Tauri SemVer)
+### Versioning (CalVer, 3-part)
 
-Public / Node packages / Git tags use **CalVer**:
+Format: **`YY.M.D`** (2-digit year, no leading zeros). Timezone: **KST**.
 
-Format: **`YYYY.MM.DD.N`** (timezone: release operator local date; this repo uses **KST**).
+| Example | Meaning |
+|---------|---------|
+| `26.7.28` | 2026-07-28 |
+| Tag | `v26.7.28` |
 
-- First release of the day: `N = 0`
-- Same day again: `N = 1`, `2`, …
-- Git tags: `vYYYY.MM.DD.N` (e.g. `v2026.07.28.2`)
+Why not `2026.7.28`? Windows MSI/WiX rejects **major > 255**, so the year is shortened to two digits. All surfaces (Node, Tauri, Cargo, tags) use the **same** three-part string (SemVer-compatible).
 
-**Tauri constraint:** `apps/desktop/src-tauri/tauri.conf.json` and `Cargo.toml` require a **SemVer** string. Map CalVer → SemVer as:
-
-| CalVer | Tauri / Cargo SemVer |
-|--------|----------------------|
-| `YYYY.MM.DD.0` | `YYYY.M.D` (no leading zeros) |
-| `YYYY.MM.DD.N` (N≥1) | `YYYY.M.D-N` (prerelease suffix) |
-
-Example: `2026.07.28.2` → `2026.7.28-2`.
+Same-day re-releases: bump the patch by encoding `day * 100 + n` when needed (e.g. first extra same day → `26.7.2801`). Prefer a new calendar day when possible.
 
 ```bash
-# local tag release flow
-git tag v2026.07.28.2
-git push origin v2026.07.28.2
+git tag v26.7.28
+git push origin v26.7.28
 ```
+
 
 ## Core only (tests / sidecar)
 
