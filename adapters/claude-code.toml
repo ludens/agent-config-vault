@@ -1,0 +1,23 @@
+id = "claude-code"
+displayName = "Claude Code"
+home = "~/.claude"
+
+[categories.agents_md]
+enabled = false
+source = "CLAUDE.md"
+target = "CLAUDE.md"
+
+[categories.skills]
+enabled = true
+source = "skills"
+target = "skills"
+
+[categories.subagents]
+enabled = true
+source = "agents"
+target = "agents"
+
+[categories.mcp]
+enabled = true
+source = "settings.json"
+target = "settings.json"

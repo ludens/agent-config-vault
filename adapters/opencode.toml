@@ -1,0 +1,23 @@
+id = "opencode"
+displayName = "OpenCode"
+home = "~/.config/opencode"
+
+[categories.agents_md]
+enabled = true
+source = "AGENTS.md"
+target = "AGENTS.md"
+
+[categories.skills]
+enabled = true
+source = "skills"
+target = "skills"
+
+[categories.subagents]
+enabled = true
+source = "agents"
+target = "agents"
+
+[categories.mcp]
+enabled = true
+source = "opencode.json"
+target = "opencode.json"

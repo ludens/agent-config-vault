@@ -1,0 +1,23 @@
+id = "grok"
+displayName = "Grok"
+home = "~/.grok"
+
+[categories.agents_md]
+enabled = true
+source = "AGENTS.md"
+target = "AGENTS.md"
+
+[categories.skills]
+enabled = true
+source = "skills"
+target = "skills"
+
+[categories.subagents]
+enabled = false
+source = "agents"
+target = "bundled/agents"
+
+[categories.mcp]
+enabled = false
+source = "mcp.json"
+target = "mcp.json"

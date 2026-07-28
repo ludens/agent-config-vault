@@ -1,0 +1,17 @@
+node_modules/
+dist/
+backups/
+state.json
+.DS_Store
+*.log
+.env
+.env.*
+agents/*
+!agents/.gitkeep
+shared/*
+!shared/.gitkeep
+# Generated Tauri resources (CI / prepare script)
+apps/desktop/src-tauri/resources/sidecar.mjs
+apps/desktop/src-tauri/resources/adapters/
+apps/desktop/src-tauri/target/
+dist-artifacts/

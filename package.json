@@ -1,0 +1,19 @@
+{
+  "name": "agent-config-vault",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm --filter @agent-config-vault/core test",
+    "typecheck": "pnpm --filter @agent-config-vault/core typecheck",
+    "dev:desktop": "pnpm --filter desktop tauri dev",
+    "prepare:desktop-resources": "node scripts/prepare-desktop-resources.mjs",
+    "build:desktop": "node scripts/prepare-desktop-resources.mjs && pnpm --filter desktop tauri build",
+    "sidecar": "pnpm --filter @agent-config-vault/core sidecar"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@10.28.0"
+}

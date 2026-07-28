@@ -1,0 +1,23 @@
+id = "codex"
+displayName = "Codex"
+home = "~/.codex"
+
+[categories.agents_md]
+enabled = false
+source = "AGENTS.md"
+target = "AGENTS.md"
+
+[categories.skills]
+enabled = false
+source = "skills"
+target = "skills"
+
+[categories.subagents]
+enabled = false
+source = "agents"
+target = "agents"
+
+[categories.mcp]
+enabled = true
+source = "config.toml"
+target = "config.toml"
