@@ -55,7 +55,7 @@ Workflow: [`.github/workflows/desktop-build.yml`](.github/workflows/desktop-buil
 | Trigger | What happens |
 |---------|----------------|
 | `workflow_dispatch` (manual) | Test + build macOS aarch64 + Windows x64 → **Artifacts** |
-| Push tag `v*` (e.g. `v26.7.28`) | Same + **draft GitHub Release** with files attached |
+| Push tag `v*` (e.g. `v26.728.1`) | Same + **draft GitHub Release** with files attached |
 
 Artifacts:
 
@@ -64,20 +64,19 @@ Artifacts:
 
 ### Versioning (CalVer, 3-part)
 
-Format: **`YY.M.D`** (2-digit year, no leading zeros). Timezone: **KST**.
+Format: **`YY.MMDD.N`** (2-digit year, month+day as minor, same-day sequence as patch). Timezone: **KST**. No leading zeros (SemVer / Tauri).
 
 | Example | Meaning |
 |---------|---------|
-| `26.7.28` | 2026-07-28 |
-| Tag | `v26.7.28` |
+| `26.728.0` | 2026-07-28, first release that day |
+| `26.728.1` | 2026-07-28, second release that day |
+| Tag | `v26.728.1` |
 
-Why not `2026.7.28`? Windows MSI/WiX rejects **major > 255**, so the year is shortened to two digits. All surfaces (Node, Tauri, Cargo, tags) use the **same** three-part string (SemVer-compatible).
-
-Same-day re-releases: bump the patch by encoding `day * 100 + n` when needed (e.g. first extra same day → `26.7.2801`). Prefer a new calendar day when possible.
+Why two-digit year? Windows MSI/WiX rejects **major > 255**. All surfaces (Node, Tauri, Cargo, tags) use the **same** three-part string.
 
 ```bash
-git tag v26.7.28
-git push origin v26.7.28
+git tag v26.728.1
+git push origin v26.728.1
 ```
 
 
