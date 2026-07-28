@@ -62,18 +62,29 @@ Artifacts:
 - `agent-config-vault-macos-aarch64`
 - `agent-config-vault-windows-x64`
 
-### Versioning (CalVer)
+### Versioning (CalVer + Tauri SemVer)
 
-Format: **`YYYY.MM.DD.N`** (timezone: release operator local date; this project uses KST when releasing from the author machine).
+Public / Node packages / Git tags use **CalVer**:
+
+Format: **`YYYY.MM.DD.N`** (timezone: release operator local date; this repo uses **KST**).
 
 - First release of the day: `N = 0`
 - Same day again: `N = 1`, `2`, …
-- Git tags: `vYYYY.MM.DD.N` (e.g. `v2026.07.28.0`)
+- Git tags: `vYYYY.MM.DD.N` (e.g. `v2026.07.28.2`)
+
+**Tauri constraint:** `apps/desktop/src-tauri/tauri.conf.json` and `Cargo.toml` require a **SemVer** string. Map CalVer → SemVer as:
+
+| CalVer | Tauri / Cargo SemVer |
+|--------|----------------------|
+| `YYYY.MM.DD.0` | `YYYY.M.D` (no leading zeros) |
+| `YYYY.MM.DD.N` (N≥1) | `YYYY.M.D-N` (prerelease suffix) |
+
+Example: `2026.07.28.2` → `2026.7.28-2`.
 
 ```bash
 # local tag release flow
-git tag v2026.07.28.0
-git push origin v2026.07.28.0
+git tag v2026.07.28.2
+git push origin v2026.07.28.2
 ```
 
 ## Core only (tests / sidecar)
