@@ -1,0 +1,189 @@
+# Build macOS + Windows desktop artifacts (Tauri 2).
+# Triggers: version tags (v*), manual workflow_dispatch.
+#
+# Runtime: app requires Node.js 20+ on PATH (stdio sidecar).
+
+name: Desktop Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-aarch64
+            os: macos-latest
+            artifact: macos-aarch64
+          - name: windows-x64
+            os: windows-latest
+            artifact: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare desktop resources (sidecar + adapters)
+        run: node scripts/prepare-desktop-resources.mjs
+
+      # Build without creating a Release here (artifacts uploaded below).
+      # Tag releases: use the companion job or attach manually from artifacts.
+      - name: Build Tauri app
+        working-directory: apps/desktop
+        run: pnpm tauri build
+        env:
+          # Avoid updater signing requirements for CI artifacts
+          CI: true
+
+      - name: Collect bundle (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="apps/desktop/src-tauri/target/release/bundle"
+          mkdir -p dist-artifacts
+          if [ ! -d "$ROOT" ]; then
+            echo "Missing $ROOT" >&2
+            find apps/desktop/src-tauri/target/release -maxdepth 3 -type f | head -50
+            exit 1
+          fi
+          find "$ROOT" -type f \( -name '*.dmg' -o -name '*.app.tar.gz' \) -print -exec cp -v {} dist-artifacts/ \;
+          if [ -z "$(ls -A dist-artifacts 2>/dev/null || true)" ]; then
+            APP=$(find "$ROOT" -type d -name '*.app' | head -1 || true)
+            if [ -n "${APP}" ]; then
+              tar -czf "dist-artifacts/$(basename "$APP").tar.gz" -C "$(dirname "$APP")" "$(basename "$APP")"
+            fi
+          fi
+          if [ -z "$(ls -A dist-artifacts 2>/dev/null || true)" ]; then
+            tar -czf dist-artifacts/macos-bundle.tar.gz -C "$ROOT" .
+          fi
+          ls -lah dist-artifacts
+
+      - name: Collect bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $root = "apps/desktop/src-tauri/target/release/bundle"
+          New-Item -ItemType Directory -Force -Path dist-artifacts | Out-Null
+          if (-not (Test-Path $root)) {
+            Write-Error "Missing $root"
+            Get-ChildItem -Recurse apps/desktop/src-tauri/target/release -ErrorAction SilentlyContinue | Select-Object -First 40
+            exit 1
+          }
+          Get-ChildItem -Path $root -Recurse -File -Include *.msi,*.exe,*.zip |
+            ForEach-Object {
+              Copy-Item $_.FullName -Destination dist-artifacts/
+              Write-Host "copied $($_.FullName)"
+            }
+          if (-not (Get-ChildItem dist-artifacts -File -ErrorAction SilentlyContinue)) {
+            Compress-Archive -Path (Join-Path $root '*') -DestinationPath dist-artifacts/windows-bundle.zip -Force
+          }
+          Get-ChildItem dist-artifacts | Format-Table Name, Length
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-config-vault-${{ matrix.artifact }}
+          path: dist-artifacts/
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Attach to GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Flatten assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          find release-assets -type f -print -exec cp -v {} upload/ \;
+          ls -lah upload
+
+      - name: Create / update release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: upload/*
+          body: |
+            ## Desktop builds
+
+            | Platform | Artifact |
+            |----------|----------|
+            | macOS (Apple Silicon) | `agent-config-vault-macos-aarch64` |
+            | Windows (x64) | `agent-config-vault-windows-x64` |
+
+            ### Runtime requirements
+            - **Node.js 20+** must be on `PATH` (sidecar process)
+            - **Windows symlink**: enable Developer Mode or run elevated if Apply fails
+
+            ### Notes
+            - Builds are **unsigned** unless you configure signing secrets
+            - Default vault for packaged app: `~/.agent-config-vault`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
