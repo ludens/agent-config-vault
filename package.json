@@ -1,6 +1,6 @@
 {
   "name": "agent-config-vault",
-  "version": "0.1.0",
+  "version": "2026.07.28.0",
   "private": true,
   "type": "module",
   "scripts": {

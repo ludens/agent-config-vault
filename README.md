@@ -55,17 +55,25 @@ Workflow: [`.github/workflows/desktop-build.yml`](.github/workflows/desktop-buil
 | Trigger | What happens |
 |---------|----------------|
 | `workflow_dispatch` (manual) | Test + build macOS aarch64 + Windows x64 → **Artifacts** |
-| Push tag `v*` (e.g. `v0.1.0`) | Same + **draft GitHub Release** with files attached |
+| Push tag `v*` (e.g. `v2026.07.28.0`) | Same + **draft GitHub Release** with files attached |
 
 Artifacts:
 
 - `agent-config-vault-macos-aarch64`
 - `agent-config-vault-windows-x64`
 
+### Versioning (CalVer)
+
+Format: **`YYYY.MM.DD.N`** (timezone: release operator local date; this project uses KST when releasing from the author machine).
+
+- First release of the day: `N = 0`
+- Same day again: `N = 1`, `2`, …
+- Git tags: `vYYYY.MM.DD.N` (e.g. `v2026.07.28.0`)
+
 ```bash
 # local tag release flow
-git tag v0.1.0
-git push origin v0.1.0
+git tag v2026.07.28.0
+git push origin v2026.07.28.0
 ```
 
 ## Core only (tests / sidecar)

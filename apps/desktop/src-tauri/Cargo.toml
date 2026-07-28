@@ -1,6 +1,6 @@
 [package]
 name = "agent-config-vault-desktop"
-version = "0.1.0"
+version = "2026.07.28.0"
 description = "agent-config-vault desktop"
 authors = ["you"]
 edition = "2021"
