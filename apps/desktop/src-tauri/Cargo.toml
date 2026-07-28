@@ -1,0 +1,21 @@
+[package]
+name = "agent-config-vault-desktop"
+version = "0.1.0"
+description = "agent-config-vault desktop"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "agent_config_vault_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# path helpers for resource_dir in Tauri 2
+# (Manager::path is included with default features)
