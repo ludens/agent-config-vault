@@ -2,6 +2,8 @@
 # Triggers: version tags (v*), manual workflow_dispatch.
 #
 # Runtime: app requires Node.js 20+ on PATH (stdio sidecar).
+# JS action runtimes: Node 24 majors (checkout/setup-node v5+, pnpm/action-setup v6,
+# upload-artifact v6, download-artifact v7, softprops/action-gh-release v3). See #1.
 
 name: Desktop Build
 
@@ -23,12 +25,12 @@ jobs:
     name: Test core
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # version comes from package.json "packageManager" (do not also set version:)
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -57,11 +59,11 @@ jobs:
             artifact: windows-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -135,7 +137,7 @@ jobs:
           Get-ChildItem dist-artifacts | Format-Table Name, Length
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: agent-config-vault-${{ matrix.artifact }}
           path: dist-artifacts/
@@ -149,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: release-assets
 
@@ -162,7 +164,7 @@ jobs:
           ls -lah upload
 
       - name: Create / update release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           generate_release_notes: true
