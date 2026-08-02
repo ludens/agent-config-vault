@@ -58,9 +58,39 @@ fn default_user_vault() -> PathBuf {
 }
 
 fn node_bin() -> PathBuf {
-    std::env::var_os("ACV_NODE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("node"))
+    if let Some(p) = std::env::var_os("ACV_NODE") {
+        return PathBuf::from(p);
+    }
+    // Windows GUI launches sometimes inherit a thin PATH. Prefer the default
+    // Node installer path when present; otherwise rely on PATH (`node`).
+    #[cfg(windows)]
+    {
+        let mut candidates = Vec::new();
+        if let Some(pf) = std::env::var_os("ProgramFiles") {
+            candidates.push(PathBuf::from(pf).join("nodejs").join("node.exe"));
+        }
+        candidates.push(PathBuf::from(r"C:\Program Files\nodejs\node.exe"));
+        if let Some(c) = candidates.into_iter().find(|c| c.is_file()) {
+            return c;
+        }
+    }
+    PathBuf::from("node")
+}
+
+/// Locate directory that contains packaged sidecar.mjs + adapters/.
+///
+/// Tauri `resource_dir()` on Windows is the exe directory; bundle pattern
+/// `resources/**/*` keeps the nested `resources/` prefix, so the real layout
+/// is `{resource_dir}/resources/sidecar.mjs`. Flat layout is also accepted.
+fn resolve_packaged_root(resource_dir: &Path) -> Option<PathBuf> {
+    // Prefer nested `resources/` (Tauri bundle of `resources/**/*` on Windows),
+    // then flat layout (resource_dir itself).
+    for cand in [resource_dir.join("resources"), resource_dir.to_path_buf()] {
+        if cand.join("sidecar.mjs").is_file() {
+            return Some(cand);
+        }
+    }
+    None
 }
 
 impl Sidecar {
@@ -83,18 +113,18 @@ impl Sidecar {
             vault_default = monorepo.clone();
             cwd = monorepo;
         } else if let Some(res) = launch.resource_dir.as_ref() {
-            // Packaged: bundled resources/sidecar.mjs
-            let script = res.join("sidecar.mjs");
-            if !script.is_file() {
-                return Err(format!(
-                    "packaged sidecar missing: {} (Node required on PATH)",
-                    script.display()
-                ));
-            }
+            // Packaged: bundled sidecar.mjs (+ adapters/) under resource root
+            let root = resolve_packaged_root(res).ok_or_else(|| {
+                format!(
+                    "packaged sidecar missing under {} (expected sidecar.mjs or resources/sidecar.mjs; Node 20+ required)",
+                    res.display()
+                )
+            })?;
+            let script = root.join("sidecar.mjs");
             cmd.arg(&script);
-            package_root = res.clone();
+            package_root = root.clone();
             vault_default = default_user_vault();
-            cwd = res.clone();
+            cwd = root;
         } else {
             return Err(
                 "sidecar launch failed: monorepo not found and no resource_dir".into(),
